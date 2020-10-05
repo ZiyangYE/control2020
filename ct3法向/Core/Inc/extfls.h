@@ -1,0 +1,36 @@
+#ifndef __USER_EXFLS_H__
+#define __USER_EXFLS_H__
+
+#include "stm32f1xx_hal.h"
+#include "stdlib.h"
+
+/*
+USED PIN 
+	DAC C15
+	DAC C0
+	DAC C14
+	DAC B9
+	DAC B8
+
+C14 MUST BE INITIED HIGH
+*/
+
+#define SERVO_FWD_ENABLE    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_15,GPIO_PIN_SET)
+#define SERVO_FWD_DISENA    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_15,GPIO_PIN_RESET)
+#define SERVO_REV_ENABLE    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_0,GPIO_PIN_SET)
+#define SERVO_REV_DISENA    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_0,GPIO_PIN_RESET)	
+
+#define SYNC_HIGH 	HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_SET)
+#define SYNC_LOW 		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_14,GPIO_PIN_RESET)	
+#define SCLK_HIGH  	HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET)
+#define SCLK_LOW 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET)	
+#define DIN_HIGH  	HAL_GPIO_WritePin(GPIOB,GPIO_PIN_8,GPIO_PIN_SET)
+#define DIN_LOW 		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_8,GPIO_PIN_RESET)	
+
+
+void vout_level(int32_t  s);
+
+void init_adc(void);
+void get_data(int32_t* getr);
+
+#endif //__USER_EXFLS_H__
