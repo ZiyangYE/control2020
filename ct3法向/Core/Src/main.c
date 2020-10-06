@@ -52,44 +52,44 @@ char sendbuf[96];
 uint8_t recvbuf[64];
 volatile uint8_t recvCnt;
 int32_t getr[8];
-//״̬������ǰ�Ƿ��ȶ� 0 ���ȶ� 1 �ٽ��ȶ� 2 �ȶ�
+//状态量，当前是否稳定 0 不稳定 1 临界稳定 2 稳定
 int stableStaus;
-//�����
+//误差量
 int error;
-//�ϴε������
+//上次的误差量
 //0 2
 int lastError;
-//�������
+//积分输出
 //0 2
 int zInt;
-//���ٻ������
+//变速积分输出
 //2 3
 int zSlo;
-//��̬���
+//暂态输出
 //0 2
 int zTrn;
-//���
+//输出
 int z;
-//�������
+//补偿输出
 //0 1 2 3
 int zBas;
-//�����ȶ�״̬
+//消抖稳定状态
 //0 2 3
 int stableCnt;
-//�����ȶ�����
+//消抖稳定方向
 //0 1 2 3
 int stableVec;
-//����ģʽ 0 λ�ÿ��� 1 �ٶȿ��� 2 ��λ���� 3 ���ٿ���
+//控制模式 0 位置控制 1 速度控制 2 力位控制 3 力速控制
 uint8_t controlMode;
 
-//����Ŀ��ֵ��
+//积分目标值域
 //1
 int targetP[128];
-//��ǰλ��
+//当前位置
 //1
 int pt;
 
-//Ŀ��ֵ
+//目标值
 float target;
 int z;
 
@@ -97,6 +97,227 @@ int hForc;
 int hPosi;
 
 uint8_t g_bAdcOver =0;
+
+
+//位置一阶误差阈值
+double sMaxThre;
+//位置一阶输出
+double sMaxOp;
+//位置二阶误差阈值
+double sSndThre;
+//位置二阶P
+double sSndP;
+//位置二阶I
+double sSndI;
+//位置三阶I
+double sTrdI;
+//位置三阶D
+double sTrdD;
+//位置三阶I饱和阈值
+double sTrdDF;
+//位置接近误差阈值
+double sClsThre;
+//位置稳定周期数
+double sStbT;
+
+//启动减速比
+double SLB;
+//速率输出偏移量
+double dsDif;
+//速率输出调整周期
+double dsChgT;
+//速率输出输出调整量
+double dsChgV;
+//速率输出限幅
+double dsMaxOp;
+
+//力一阶误差阈值
+double fMaxThre;
+//力一阶输出
+double fMaxOp;
+//力二阶误差阈值
+double fSndThre;
+//力二阶P
+double fSndP;
+//力二阶I
+double fSndI;
+//力三阶I
+double fTrdI;
+//力三阶D
+double fTrdD;
+//力置三阶I饱和阈值
+double fTrdDF;
+//力接近误差阈值
+double fClsThre;
+//力变速积分I
+double fSpcI;
+//力去纹波阈值
+double fReMThre;
+//力去纹波P
+double fReMP;
+//力稳定周期数
+double fStbT;
+
+//力速输出偏移量
+double dfDif;
+//力速输出调整周期
+double dfChgT;
+//力速输出输出调整量
+double dfChgV;
+//力速输出限幅
+double dfMaxOp;
+//力速变速积分周期
+double dfSpcT;
+//力速变速积分比
+double dfSpcI;
+//力速变速积分权重
+double dfSpcM;
+//力速差归零阈值倍数
+double dfDifZThre;
+
+//设备类型0 法向 1切向
+uint8_t devType;
+
+//配置状态
+uint8_t cfgAv;
+
+FLASH_EraseInitTypeDef fls0;
+uint32_t tmp0;
+
+//从 0x1F000 开始 到0x1F300
+uint8_t cfgbuf[289+4+8];
+
+uint32_t reading_adr=0;
+uint32_t writing_adr=0;
+
+void m2(double* d1){
+	for(int i=0;i<8;i++)
+		*(uint8_t*)(d1+i)=*(volatile uint8_t*)(reading_adr+i);
+	reading_adr+=8;
+}
+
+void readCfg(){
+	for(int i=0;i<289+4;i++)
+		*(uint8_t*)&cfgbuf[i]=*(volatile uint8_t*)(i+0x0801F000+i);
+	if(cfgbuf[0]==0x01 && cfgbuf[1]==0xFE){
+		uint8_t test0=0;
+		uint8_t test1=0;
+		for(int i=2;i<289+1;i++){
+			test0^=cfgbuf[i];
+			test1^=cfgbuf[i+1];
+		}
+		if(test0==cfgbuf[289+2]&&test1==cfgbuf[289+3]){
+			reading_adr=(uint32_t)&cfgbuf[2];
+			m2(&sMaxThre);
+			m2(&sMaxOp);
+			m2(&sSndThre);
+			m2(&sSndP);
+			m2(&sSndI);
+			m2(&sTrdI);
+			m2(&sTrdD);
+			m2(&sTrdDF);
+			m2(&sClsThre);
+			m2(&sStbT);
+
+			m2(&SLB);
+			m2(&dsDif);
+			m2(&dsChgT);
+			m2(&dsChgV);
+			m2(&dsMaxOp);
+
+			m2(&fMaxThre);
+			m2(&fMaxOp);
+			m2(&fSndThre);
+			m2(&fSndP);
+			m2(&fSndI);
+			m2(&fTrdI);
+			m2(&fTrdD);
+			m2(&fTrdDF);
+			m2(&fClsThre);
+			m2(&fSpcI);
+			m2(&fReMThre);
+			m2(&fReMP);
+			m2(&fStbT);
+
+			m2(&dfDif);
+			m2(&dfChgT);
+			m2(&dfChgV);
+			m2(&dfMaxOp);
+			m2(&dfSpcT);
+			m2(&dfSpcI);
+			m2(&dfSpcM);
+			m2(&dfDifZThre);
+
+			*(uint8_t*)(&devType)=*(volatile uint8_t*)(reading_adr);
+			cfgAv=1;
+		}
+	}
+	cfgAv=0;
+}
+
+//一次36*8+1个数据
+//289个数据
+//2头+289+2校验
+void editCfg(int stage){
+	static int wrcnt;
+	switch (stage)
+	{
+	case 0://z输出
+		if(cfgAv!=1)vout_level(0);
+		break;
+	case 1://读取数据并写入
+		if(cfgAv==2){
+			int tmpCnt=recvCnt;
+			if(tmpCnt>5&&recvbuf[0]==0x03&&recvbuf[1]==0xF1){
+				memcpy(cfgbuf+recvbuf[2]*256+recvbuf[3],&recvbuf[5+recvbuf[2]*256+recvbuf[3]],recvbuf[4]);
+				wrcnt+=recvbuf[4];
+				if(wrcnt>290){
+					uint8_t test0=0;
+					uint8_t test1=0;
+					for(int i=2;i<289+1;i++){
+						test0^=cfgbuf[i];
+						test1^=cfgbuf[i+1];
+					}
+					if(test0==cfgbuf[289+2]&&test1==cfgbuf[289+3]){
+						sendbuf[0]=0x04;
+						sendbuf[1]=0xF2;
+						sendbuf[2]=0x05;
+						sendbuf[3]=0xF3;
+						CDC_Transmit_FS((uint8_t *)sendbuf,4);
+
+						int adr=0x0801F000;
+						HAL_FLASH_Unlock();
+						fls0.TypeErase=FLASH_TYPEERASE_PAGES;
+						fls0.PageAddress=adr;
+						fls0.NbPages=1;
+						HAL_FLASHEx_Erase(&fls0,&tmp0);
+
+						for(int i=0;i<(293+4);i+=4)				
+						HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,0x0801F000+i,*(uint32_t*)&cfgbuf[i]);
+										
+						HAL_FLASH_Lock();
+
+						HAL_Delay(1);
+						NVIC_SystemReset();
+					}
+				}
+			}
+		}
+		break;
+	case 2://上传数据
+		wrcnt=0;
+		HAL_Delay(10);
+		CDC_Transmit_FS((uint8_t *)cfgbuf,293);
+		HAL_Delay(10);
+		CDC_Transmit_FS((uint8_t *)cfgbuf,293);
+		HAL_Delay(10);
+		CDC_Transmit_FS((uint8_t *)cfgbuf,293);
+		break;
+	default:
+		break;
+	}
+}
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -119,20 +340,16 @@ static void MX_SPI1_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	FLASH_EraseInitTypeDef fls0;
-	uint32_t tmp0;
-	//���Ᵽ��
+	//额外保护
 	int extraPUpLimit=150000000;//145mm
 	int extraPDnLimit=-10000;//-0.01mm
 	int extraFUpLimit=100000000;//1000kN
-	//�趨����
+	//设定保护
 	int pUpLimit=2000000000;
 	int pDnLimit=-100000000;
 	int fUpLimit=2000000000;
-	//0TODO �豸���� ����������
-	uint8_t devType=0;
-	//0TODO �ǵ���״̬��moded=0
-	uint8_t moded=0;//��У׼=1��δУ׼=0
+	//0TODO 非调试状态，moded=0
+	uint8_t moded=0;//已校准=1，未校准=0
 	//int modeD[2]={-1111400,27600};
 	int modeD[2]={0,0};
 	//float modeK[2]={0.0483973,-0.035609};
@@ -174,9 +391,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	vout_level(0);
 	
-	//��ȡУ׼״̬ ��ȡ����״̬
-	//0x0801F800У׼���� +0 D[0] +4 D[1] +8 K[0] +12 K[1] +16 0x01 +20 0xFE
-	//0x0801FC00�������� +0 pU +4 0x02 +8 0xFD +12 pD +16 0x03 +20 0xFC +24 fU +28 0x04 +32 0xFB
+	//读取校准状态 读取设限状态
+	//0x0801F800校准数据 +0 D[0] +4 D[1] +8 K[0] +12 K[1] +16 0x01 +20 0xFE
+	//0x0801FC00设限数据 +0 pU +4 0x02 +8 0xFD +12 pD +16 0x03 +20 0xFC +24 fU +28 0x04 +32 0xFB
 	uint32_t adr=0x0801F800;
 	if(*(volatile uint32_t*)(adr+16)==0x01 && *(volatile uint32_t*)(adr+20)==0xFE){
 		*(uint32_t*)&modeD[0] = *(volatile uint32_t*)adr;
@@ -200,6 +417,8 @@ int main(void)
 		*(uint32_t*)&fUpLimit = *(volatile uint32_t*)(adr);
 	}
 	
+	if(cfgAv!=1)moded=0;
+
 	HAL_Delay(3000);
 	
 	
@@ -279,6 +498,8 @@ int main(void)
 			if(moded==0)z=modedZ;
 			
 			vout_level(-z);
+			editCfg(0);
+
 			if(stableStaus==1)stableStaus=2;
 			if(stableStaus==0){
 				if(abs(lhPosi-hPosi)<100000 && abs(lhForc-hForc)<200000){
@@ -294,6 +515,7 @@ int main(void)
 			lhForc=hForc;
 		}
 		if(recvCnt!=0){
+			editCfg(1);
 			uint8_t tmpbuf[64];
 			uint8_t test;
 			int tmpCnt=recvCnt;
@@ -306,36 +528,36 @@ int main(void)
 					if(test==tmpbuf[i+6]){
 						int data;
 						*(uint32_t*)(&data)=(tmpbuf[i+2]<<24)+(tmpbuf[i+3]<<16)+(tmpbuf[i+4]<<8)+(tmpbuf[i+5]);
-						//��ʼ�����·����ݰ�
+						//开始处理下发数据包
 						switch(tmpbuf[i+1]>>4){
 							case 0:
-								//У׼
+								//校准
 								switch(tmpbuf[i+1]&0x0F){
-									case 0://��ʼУ׼
+									case 0://开始校准
 										modedZ=0;
 										moded=0;
 										modingact&=0x00;
 										break;
-									case 1://�趨���
+									case 1://设定输出
 										modedZ=-data;
 										break;
-									case 2://��ȡ0λposi
+									case 2://读取0位posi
 										moding[0]=getr[7]/256;
 										modingact |= 0x01;
 										break;
-									case 3://��ȡ��λposi
+									case 3://读取满位posi
 										moding[1]=getr[7]/256;
 										modingact |= 0x02;
 										moding[5]=data;
 										break;
-									case 4://���λ��У׼
+									case 4://完成位移校准
 										modeK[0]=(float)(((double)(moding[1]-moding[0]))/(double)(moding[5]));
 										modeD[0]=-moding[0]-modeK[0]*100000;
 										moded=1;
 										modedZ=0;
 										target=(int)(getr[7]/256+modeD[0])/modeK[0];
 										modeAV=1;
-										//Flash д��
+										//Flash 写入
 										adr=0x0801F800;
 										HAL_FLASH_Unlock();
 										fls0.TypeErase=FLASH_TYPEERASE_PAGES;
@@ -352,19 +574,19 @@ int main(void)
 										
 										HAL_FLASH_Lock();
 										break;
-									case 5://�趨λ��
+									case 5://设定位移
 										target=data;
 										break;
-									case 6://��ȡ0λ��
+									case 6://读取0位力
 										moding[2]=getr[6]/256;
 										modingact |= 0x04;
 										break;
-									case 7://��ȡ�ο�λ��
+									case 7://读取参考位力
 										moding[3]=getr[6]/256;
 										modingact |= 0x08;
 										moding[4]=data;
 										break;
-									case 8://���У׼
+									case 8://完成校准
 										
 										modeK[1]=(float)(((double)(moding[3]-moding[2]))/(double)moding[4]);
 										
@@ -374,7 +596,7 @@ int main(void)
 										moded=1;
 										modedZ=0;
 										modeAV=1;
-										//Flash д��
+										//Flash 写入
 										adr=0x0801F800;
 										HAL_FLASH_Unlock();
 										fls0.TypeErase=FLASH_TYPEERASE_PAGES;
@@ -392,13 +614,13 @@ int main(void)
 										HAL_FLASH_Lock();
 									
 										break;
-									case 0x0A://��ʼ��У׼
+									case 0x0A://开始力校准
 										moded=2;
 										modedZ=0;
 										target=0;
 										break;
 									
-									default://ȡ��У׼
+									default://取消校准
 										if(modeAV==1){
 											moded=1;
 											modedZ=0;
@@ -409,23 +631,23 @@ int main(void)
 								}
 								break;
 							case 1:
-								//����
+								//设限
 								adr=0x0801FC00;
 								for(int wrti=0;wrti<9;wrti+=4){
 									*(uint32_t*)&mem[wrti] = *(volatile uint32_t*)(adr+4*wrti);
 								}
 								switch(tmpbuf[i+1]&0x0F){
-									case 0://λ������
+									case 0://位移上限
 										pUpLimit=data;
 										mem[1]=0x02;
 										mem[2]=0xFD;
 										break;
-									case 1://λ������
+									case 1://位移下限
 										pDnLimit=data;
 										mem[4]=0x03;
 										mem[5]=0xFC;
 										break;
-									case 2://������
+									case 2://力上限
 										fUpLimit=data;
 										mem[7]=0x04;
 										mem[8]=0xFB;
@@ -433,10 +655,10 @@ int main(void)
 									default:
 										break;
 								}
-								//TODO д��flash
+								//TODO 写入flash
 								break;
 							case 2:
-								//�˶�
+								//运动
 								if(moded!=1)break;
 								sysStableCnt=0;
 								stableStaus=0;
@@ -446,8 +668,13 @@ int main(void)
 								else
 									target=data;
 								break;
+							case 3:
+								//配置数据
+								cfgAv=2;
+								editCfg(2);
+								break;
 						}
-						//��ɴ����·����ݰ�
+						//完成处理下发数据包
 						break;
 					}
 				}

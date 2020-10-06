@@ -48,80 +48,80 @@ int lpCnt;
 
 
 //位置一阶误差阈值
-#define sMaxThre 1000000.0
+extern double sMaxThre;
 //位置一阶输出
-#define sMaxOp 5000000
+extern double sMaxOp;
 //位置二阶误差阈值
-#define sSndThre 100000.0
+extern double sSndThre;
 //位置二阶P
-#define sSndP 3.0
+extern double sSndP;
 //位置二阶I
-#define sSndI 1.0
+extern double sSndI;
 //位置三阶I
-#define sTrdI 0.5
+extern double sTrdI;
 //位置三阶D
-#define sTrdD 1.0
+extern double sTrdD;
 //位置三阶I饱和阈值
-#define sTrdDF 200000
+extern double sTrdDF;
 //位置接近误差阈值
-#define sClsThre 10000
+extern double sClsThre;
 //位置稳定周期数
-#define sStbT 256
+extern double sStbT;
 
 //启动减速比
-#define SLB 8.0
+extern double SLB;
 //速率输出偏移量
-#define dsDif 200000
+extern double dsDif;
 //速率输出调整周期
-#define dsChgT 10
+extern double dsChgT;
 //速率输出输出调整量
-#define dsChgV 50000
+extern double dsChgV;
 //速率输出限幅
-#define dsMaxOp 5000000
+extern double dsMaxOp;
 
 //力一阶误差阈值
-#define fMaxThre 1000000.0
+extern double fMaxThre;
 //力一阶输出
-#define fMaxOp 1000000
+extern double fMaxOp;
 //力二阶误差阈值
-#define fSndThre 100000.0
+extern double fSndThre;
 //力二阶P
-#define fSndP 3.0
+extern double fSndP;
 //力二阶I
-#define fSndI 1.0
+extern double fSndI;
 //力三阶I
-#define fTrdI 3
+extern double fTrdI;
 //力三阶D
-#define fTrdD 1.0
+extern double fTrdD;
 //力置三阶I饱和阈值
-#define fTrdDF 200000
+extern double fTrdDF;
 //力接近误差阈值
-#define fClsThre 20000
+extern double fClsThre;
 //力变速积分I
-#define fSpcI 0.05
+extern double fSpcI;
 //力去纹波阈值
-#define fReMThre 3000
+extern double fReMThre;
 //力去纹波P
-#define fReMP 3.0
+extern double fReMP;
 //力稳定周期数
-#define fStbT 256
+extern double fStbT;
 
 //力速输出偏移量
-#define dfDif 50000
+extern double dfDif;
 //力速输出调整周期
-#define dfChgT 10
+extern double dfChgT;
 //力速输出输出调整量
-#define dfChgV 10000
+extern double dfChgV;
 //力速输出限幅
-#define dfMaxOp 1000000
+extern double dfMaxOp;
 //力速变速积分周期
-#define dfSpcT 100
+extern double dfSpcT;
 //力速变速积分比
-#define dfSpcI 0.02
+extern double dfSpcI;
 //力速变速积分权重
-#define dfSpcM 0.6
+extern double dfSpcM;
 //力速差归零阈值倍数
-#define dfDifZThre 40
+extern double dfDifZThre;
 
 void controlCore()
 {
