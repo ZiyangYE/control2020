@@ -199,7 +199,7 @@ void m2(double* d1){
 void readCfg(){
 	for(int i=0;i<289+4;i++)
 		*(uint8_t*)&cfgbuf[i]=*(volatile uint8_t*)(i+0x0801F000+i);
-	if(cfgbuf[0]==0x01 && cfgbuf[1]==0xFE){
+	if(cfgbuf[0]==0x01 && cfgbuf[1]==0xF4){
 		uint8_t test0=0;
 		uint8_t test1=0;
 		for(int i=2;i<289+1;i++){
@@ -268,8 +268,9 @@ void editCfg(int stage){
 	case 1://读取数据并写入
 		if(cfgAv==2){
 			int tmpCnt=recvCnt;
+			//一次不超过50Bytes分6个包0 1头 2 3偏移量 4 长度
 			if(tmpCnt>5&&recvbuf[0]==0x03&&recvbuf[1]==0xF1){
-				memcpy(cfgbuf+recvbuf[2]*256+recvbuf[3],&recvbuf[5+recvbuf[2]*256+recvbuf[3]],recvbuf[4]);
+				memcpy(cfgbuf+recvbuf[2]*256+recvbuf[3],&recvbuf[5],recvbuf[4]);
 				wrcnt+=recvbuf[4];
 				if(wrcnt>290){
 					uint8_t test0=0;
@@ -341,9 +342,14 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	//额外保护
-	int extraPUpLimit=150000000;//145mm
-	int extraPDnLimit=-10000;//-0.01mm
-	int extraFUpLimit=100000000;//1000kN
+	//int extraPUpLimit=150000000;//150mm
+	//int extraPDnLimit=-10000;//-0.01mm
+	//int extraFUpLimit=100000000;//1000kN
+	
+	int extraPUpLimit=160000000;//160mm
+	int extraPDnLimit=-1000000;//-1mm
+	int extraFUpLimit=500000000;//5000kN
+	
 	//设定保护
 	int pUpLimit=2000000000;
 	int pDnLimit=-100000000;
@@ -477,6 +483,7 @@ int main(void)
 			sendbuf[15]=0xFF;
 			for(int i=2;i<13;i++)sendbuf[13]^=sendbuf[i];
 			
+			if(cfgAv==1)
 			CDC_Transmit_FS((uint8_t *)sendbuf,16);
 			//sprintf(sendbuf,"force:|%d| *10mN,\tposition:|%d| nm\n",hForc,hPosi);
 			//CDC_Transmit_FS((uint8_t *)sendbuf,strlen(sendbuf));
