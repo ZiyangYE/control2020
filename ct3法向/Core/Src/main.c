@@ -96,6 +96,21 @@ int z;
 int hForc;
 int hPosi;
 
+int lasttime=0;
+
+int gettime(){
+	int newtime=HAL_GetTick();
+	if(newtime<lasttime)lasttime=newtime;
+	int rst;
+	rst=newtime-lasttime;
+	return rst;
+}
+
+int resettime(){
+	lasttime=HAL_GetTick();
+	return 0;
+}
+
 uint8_t g_bAdcOver =0;
 
 
@@ -189,6 +204,8 @@ uint8_t cfgbuf[289+4+8];
 
 uint32_t reading_adr=0;
 uint32_t writing_adr=0;
+
+int connected=0;
 
 void m2(double* d1){
 	for(int i=0;i<8;i++)
@@ -468,6 +485,15 @@ int main(void)
 			hForc=(int)(getr[6]/256+modeD[1])/modeK[1];
 
 			
+			if(gettime()>1000){
+				if(moded){
+					controlMode=0;
+					target=hPosi;
+				}else{
+					controlMode=4;
+				}
+			}
+			
 			sendbuf[0]=	0xFE;
 			sendbuf[1]=	0xFE;
 			sendbuf[2]=	moded;
@@ -525,6 +551,7 @@ int main(void)
 			lhForc=hForc;
 		}
 		if(recvCnt!=0){
+			resettime();
 			editCfg(1);
 			uint8_t tmpbuf[64];
 			uint8_t test;
