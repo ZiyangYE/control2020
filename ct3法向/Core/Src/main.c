@@ -192,13 +192,13 @@ uint32_t writing_adr=0;
 
 void m2(double* d1){
 	for(int i=0;i<8;i++)
-		*(uint8_t*)(d1+i)=*(volatile uint8_t*)(reading_adr+i);
+		*(uint8_t*)((int)d1+i)=*(volatile uint8_t*)(reading_adr+i);
 	reading_adr+=8;
 }
 
 void readCfg(){
 	for(int i=0;i<289+4;i++)
-		*(uint8_t*)&cfgbuf[i]=*(volatile uint8_t*)(i+0x0801F000+i);
+		*(uint8_t*)&cfgbuf[i]=*(volatile uint8_t*)(0x0801F000+i);
 	if(cfgbuf[0]==0x01 && cfgbuf[1]==0xF4){
 		uint8_t test0=0;
 		uint8_t test1=0;
@@ -250,6 +250,7 @@ void readCfg(){
 
 			*(uint8_t*)(&devType)=*(volatile uint8_t*)(reading_adr);
 			cfgAv=1;
+			return;
 		}
 	}
 	cfgAv=0;
@@ -272,7 +273,7 @@ void editCfg(int stage){
 			if(tmpCnt>5&&recvbuf[0]==0x03&&recvbuf[1]==0xF1){
 				memcpy(cfgbuf+recvbuf[2]*256+recvbuf[3],&recvbuf[5],recvbuf[4]);
 				wrcnt+=recvbuf[4];
-				if(wrcnt>290){
+				if(wrcnt>400){
 					uint8_t test0=0;
 					uint8_t test1=0;
 					for(int i=2;i<289+1;i++){
@@ -423,6 +424,8 @@ int main(void)
 		*(uint32_t*)&fUpLimit = *(volatile uint32_t*)(adr);
 	}
 	
+	
+	readCfg();
 	if(cfgAv!=1)moded=0;
 
 	HAL_Delay(3000);
